@@ -13,7 +13,7 @@ body {
     border-radius: 8px;
     text-align: center;
 }
-input {
+input, select {
     padding: 0.5rem;
     margin: 0.5rem 0;
     border: 1px solid #ccc;
