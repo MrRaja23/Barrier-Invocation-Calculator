@@ -1,24 +1,34 @@
+/**
+ * Fetches skills data from the JSON file.
+ * @returns {Object|null} Skills data or null if an error occurs.
+ */
 async function fetchSkillsData() {
     try {
-        const response = await fetch('skills.json'); // Adjust the path to match your file structure
-        if (!response.ok) throw new Error('Failed to fetch skills data');
+        const response = await fetch('skills.json'); // Adjust path if necessary
+        if (!response.ok) throw new Error(`Failed to fetch skills.json: ${response.statusText}`);
         const data = await response.json();
-        console.log('Fetched skills data:', data); // Log to confirm
+        console.log('Fetched skills data:', data); // Log fetched data
         return data;
     } catch (error) {
         console.error('Error fetching skills data:', error);
+        alert('Error loading skills data. Please check the console for details.');
         return null; // Return null on error
     }
 }
 
+/**
+ * Populates the skill dropdown with data.
+ * @param {Object} skills - Skills data.
+ */
 function populateSkillDropdown(skills) {
-    console.log('Populating dropdown with skills:', skills); // Log to confirm
-    const skillSelect = document.getElementById('skill');
-    skillSelect.innerHTML = '<option value="" disabled selected>Select a skill</option>'; // Placeholder
+    console.log('Populating skill dropdown with skills:', skills); // Log to verify skills data
 
-    for (let key in skills) {
+    const skillSelect = document.getElementById('skill');
+    skillSelect.innerHTML = '<option value="" disabled selected>Select a skill</option>'; // Add placeholder
+
+    for (const key in skills) {
         skills[key].forEach(level => {
-            let option = document.createElement('option');
+            const option = document.createElement('option');
             option.value = `${key}_${level.level}`;
             option.text = `${key.charAt(0).toUpperCase() + key.slice(1)} - Level ${level.level}`;
             skillSelect.appendChild(option);
@@ -26,16 +36,9 @@ function populateSkillDropdown(skills) {
     }
 }
 
-document.addEventListener('DOMContentLoaded', async function() {
-    const skills = await fetchSkillsData();
-    if (skills) {
-        populateSkillDropdown(skills);
-        window.skillsData = skills; // Cache globally
-    } else {
-        document.getElementById('skill').innerHTML = '<option value="" disabled selected>Error loading skills</option>';
-    }
-});
-
+/**
+ * Calculates energy values based on the selected inputs.
+ */
 async function calculateEnergy() {
     const getValue = id => parseFloat(document.getElementById(id).value) || 0;
 
@@ -47,15 +50,21 @@ async function calculateEnergy() {
     const baseCastTime = getValue('baseCastTime');
 
     const skillValue = document.getElementById('skill').value;
+    if (!skillValue) {
+        document.getElementById('result').innerText = 'Error: Please select a skill.';
+        return;
+    }
+
     const [skillKey, skillLevel] = skillValue.split('_');
 
+    // Ensure skills data is loaded
     if (!window.skillsData || !skillKey || !skillLevel) {
-        document.getElementById('result').innerText = 'Error: Please select a skill and ensure data is loaded.';
+        document.getElementById('result').innerText = 'Error: Skills data not loaded or invalid skill selected.';
         return;
     }
 
     // Find the selected skill level data
-    const selectedSkill = window.skillsData[skillKey].find(level => level.level == skillLevel);
+    const selectedSkill = window.skillsData[skillKey]?.find(level => level.level == skillLevel);
     if (!selectedSkill) {
         document.getElementById('result').innerText = 'Error: Selected skill data not found.';
         return;
@@ -72,10 +81,22 @@ async function calculateEnergy() {
 
     const energyCost = baseCastTime * 100;
 
-    // Display result
-    document.getElementById('result').innerText =
-        `Skill: ${skillKey.charAt(0).toUpperCase() + skillKey.slice(1)}, Level: ${skillLevel}
-Required Energy Shield: ${ES_min.toFixed(2)} - ${ES_max.toFixed(2)}
-Energy gained per spell cast: ${energyGained.toFixed(2)}
-Energy cost per cast: ${energyCost.toFixed(2)}`;
+// Display result
+    document.getElementById('result').innerText = `
+        Skill: ${skillKey.charAt(0).toUpperCase() + skillKey.slice(1)}, Level: ${skillLevel}
+        Required Energy Shield: ${ES_min.toFixed(2)} - ${ES_max.toFixed(2)}
+        Energy gained per spell cast: ${energyGained.toFixed(2)}
+        Energy cost per cast: ${energyCost.toFixed(2)}
+    `;
 }
+
+// Initialize the app
+document.addEventListener('DOMContentLoaded', async function () {
+    const skills = await fetchSkillsData();
+    if (skills) {
+        populateSkillDropdown(skills);
+        window.skillsData = skills; // Cache globally to avoid re-fetching
+    } else {
+        console.error('Failed to initialize app due to missing skills data.');
+    }
+});
