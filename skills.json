@@ -19,7 +19,7 @@
         { "level": 17, "manaCost": 64, "castTime": 1.10, "dmgLow": 69, "dmgHigh": 389 },
         { "level": 18, "manaCost": 72, "castTime": 1.10, "dmgLow": 78, "dmgHigh": 439 },
         { "level": 19, "manaCost": 82, "castTime": 1.10, "dmgLow": 87, "dmgHigh": 495 },
-        { "level": 20, "manaCost": 93, "castTime": 1.10, "dmgLow": 98, "dmgHigh": 557 }
+        { "level": 20, "manaCost": 93, "castTime": 1.10, "dmgLow": 98, "dmgHigh": 557 },
         { "level": 21, "manaCost": 105, "castTime": 1.10, "dmgLow": 110, "dmgHigh": 626 },
         { "level": 22, "manaCost": 119, "castTime": 1.10, "dmgLow": 124, "dmgHigh": 702 },
         { "level": 23, "manaCost": 135, "castTime": 1.10, "dmgLow": 139, "dmgHigh": 788 },
