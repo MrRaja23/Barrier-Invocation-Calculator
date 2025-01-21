@@ -23,7 +23,8 @@
             <input id="infernalFlame" type="number" required placeholder="Enter flame value">
             
             <label for="skillName">Skill Name:</label>
-            <input id="skillName" type="text" required placeholder="Enter skill name" oninput="updateLevels()">
+            <input id="skillName" type="text" required placeholder="Enter skill name">
+            <button type="button" onclick="loadLevels()">Load Levels</button>
             
             <label for="skillLevel">Skill Level:</label>
             <select id="skillLevel" required onchange="displaySkillData()">
