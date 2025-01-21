@@ -1,6 +1,6 @@
 async function fetchSkillsData() {
     try {
-        const response = await fetch('/skills.json');
+        const response = await fetch('skills.json');
         if (!response.ok) throw new Error('Failed to fetch skills data');
         const data = await response.json();
         return data;
