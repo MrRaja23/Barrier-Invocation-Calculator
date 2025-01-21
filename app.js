@@ -11,7 +11,7 @@ async function fetchSkillsData() {
     }
 }
 
-function updateLevels() {
+async function loadLevels() {
     const skillName = document.getElementById('skillName').value.toLowerCase();
     const skillLevelSelect = document.getElementById('skillLevel');
     const skillDataDiv = document.getElementById('skillData');
@@ -20,8 +20,18 @@ function updateLevels() {
     skillLevelSelect.innerHTML = '<option value="" disabled selected>Select a level</option>';
     skillDataDiv.innerHTML = '';
 
-    if (!window.skillsData || !window.skillsData[skillName]) {
-        console.warn('Skill not found or data not loaded.');
+    if (!window.skillsData) {
+        if (!window.skillsData) {
+            window.skillsData = await fetchSkillsData();
+        }
+        if (!window.skillsData) {
+            alert('Failed to load skills data. Please try again later.');
+            return;
+        }
+    }
+
+    if (!window.skillsData[skillName]) {
+        alert(`Skill "${skillName}" not found.`);
         return;
     }
 
@@ -32,6 +42,8 @@ function updateLevels() {
         option.text = `Level ${level.level}`;
         skillLevelSelect.appendChild(option);
     });
+
+    alert('Levels loaded successfully.');
 }
 
 function displaySkillData() {
@@ -101,10 +113,8 @@ async function calculateEnergy() {
 }
 
 document.addEventListener('DOMContentLoaded', async function () {
-    const skills = await fetchSkillsData();
-    if (skills) {
-        window.skillsData = skills; // Cache globally
-    } else {
+    window.skillsData = await fetchSkillsData();
+    if (!window.skillsData) {
         console.error('Failed to initialize app due to missing skills data.');
     }
 });
