@@ -9,32 +9,33 @@
 <body>
     <div id="app">
         <h1>Barrier Invocation Calculator</h1>
-        <form>
+        <form onsubmit="return false;">
             <label for="life">Life:</label>
-            <input id="life" type="number" required>
+            <input id="life" type="number" required placeholder="Enter life value">
             
             <label for="es">Energy Shield:</label>
-            <input id="es" type="number" required>
+            <input id="es" type="number" required placeholder="Enter energy shield value">
             
             <label for="fireRes">Fire Resistance (%):</label>
-            <input id="fireRes" type="number" required>
+            <input id="fireRes" type="number" required placeholder="Enter fire resistance (e.g., 75)">
             
             <label for="infernalFlame">Infernal Flame:</label>
-            <input id="infernalFlame" type="number" required>
-
+            <input id="infernalFlame" type="number" required placeholder="Enter flame value">
+            
             <label for="skill">Select Skill:</label>
             <select id="skill" required>
-                <!-- Skills will be added dynamically via JavaScript -->
+                <option value="" disabled selected>Select a skill</option>
+                <!-- Skills will be dynamically populated -->
             </select>
             
             <label for="targetEnergy">Target Energy Gain (660.01 to 660.25):</label>
-            <input id="targetEnergy" type="number" required>
+            <input id="targetEnergy" type="number" required placeholder="Enter target energy gain">
             
             <label for="buffFactor">Buff Factor (e.g., 2.4 for +140%):</label>
-            <input id="buffFactor" type="number" step="0.01" required>
+            <input id="buffFactor" type="number" step="0.01" required placeholder="Enter buff factor">
             
             <label for="baseCastTime">Base Cast Time (in seconds):</label>
-            <input id="baseCastTime" type="number" step="0.01" required>
+            <input id="baseCastTime" type="number" step="0.01" required placeholder="Enter cast time">
             
             <button type="button" onclick="calculateEnergy()">Calculate</button>
         </form>
