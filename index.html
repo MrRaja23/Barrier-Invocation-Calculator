@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barrier Invocation Calculator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <h1>Barrier Invocation Calculator</h1>
+        <form>
+            <label for="life">Life:</label>
+            <input id="life" type="number" required>
+            
+            <label for="fireRes">Fire Resistance (%):</label>
+            <input id="fireRes" type="number" required>
+            
+            <label for="targetEnergy">Target Energy Gain (660.01 to 660.25):</label>
+            <input id="targetEnergy" type="number" required>
+            
+            <label for="buffFactor">Buff Factor (2.4 for +140%):</label>
+            <input id="buffFactor" type="number" required>
+            
+            <button type="button" onclick="calculateEnergy()">Calculate</button>
+        </form>
+        <p id="result"></p>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
