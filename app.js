@@ -62,12 +62,20 @@ function displaySkillData() {
         return;
     }
 
+    // Extract baseDamage (assuming it's an array [low, high])
+    const [lowDamage, highDamage] = selectedLevel.baseDamage || [selectedLevel.dmgLow, selectedLevel.dmgHigh];
+    
+    // Calculate average damage
+    const avgDamage = ((lowDamage + highDamage) / 2).toFixed(2);
+
+    // Display the skill data including low, high, and average damage
     skillDataDiv.innerHTML = `
         <p><strong>Skill Data:</strong></p>
         <p>Level: ${selectedLevel.level}</p>
         <p>Mana Cost: ${selectedLevel.manaCost}</p>
         <p>Cast Time: ${selectedLevel.castTime}s</p>
-        <p>Base Damage: ${selectedLevel.dmgLow} - ${selectedLevel.dmgHigh}</p>
+        <p>Damage Range: ${lowDamage} - ${highDamage}</p>
+        <p>Average Damage: ${avgDamage}</p>
     `;
 }
 
