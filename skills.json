@@ -34,3 +34,42 @@
         { "level": 32, "manaCost": 412, "castTime": 1.10, "dmgLow": 384, "dmgHigh": 2175 }
     ]
 }
+
+{
+  "name": "Spark",
+  "baseCastTime": 0.7,
+  "levels": [
+    { "level": 1, "manaCost": 6, "castTime": 0.7, "baseDamage": [1, 8] },
+    { "level": 2, "manaCost": 6, "castTime": 0.7, "baseDamage": [1, 11] },
+    { "level": 3, "manaCost": 7, "castTime": 0.7, "baseDamage": [1, 16] },
+    { "level": 4, "manaCost": 8, "castTime": 0.7, "baseDamage": [1, 21] },
+    { "level": 5, "manaCost": 10, "castTime": 0.7, "baseDamage": [1, 26] },
+    { "level": 6, "manaCost": 11, "castTime": 0.7, "baseDamage": [2, 32] },
+    { "level": 7, "manaCost": 12, "castTime": 0.7, "baseDamage": [2, 38] },
+    { "level": 8, "manaCost": 14, "castTime": 0.7, "baseDamage": [2, 46] },
+    { "level": 9, "manaCost": 16, "castTime": 0.7, "baseDamage": [3, 54] },
+    { "level": 10, "manaCost": 18, "castTime": 0.7, "baseDamage": [3, 63] },
+    { "level": 11, "manaCost": 21, "castTime": 0.7, "baseDamage": [4, 73] },
+    { "level": 12, "manaCost": 23, "castTime": 0.7, "baseDamage": [4, 84] },
+    { "level": 13, "manaCost": 27, "castTime": 0.7, "baseDamage": [5, 96] },
+    { "level": 14, "manaCost": 30, "castTime": 0.7, "baseDamage": [6, 110] },
+    { "level": 15, "manaCost": 34, "castTime": 0.7, "baseDamage": [7, 125] },
+    { "level": 16, "manaCost": 39, "castTime": 0.7, "baseDamage": [7, 141] },
+    { "level": 17, "manaCost": 44, "castTime": 0.7, "baseDamage": [8, 160] },
+    { "level": 18, "manaCost": 50, "castTime": 0.7, "baseDamage": [10, 181] },
+    { "level": 19, "manaCost": 56, "castTime": 0.7, "baseDamage": [11, 203] },
+    { "level": 20, "manaCost": 64, "castTime": 0.7, "baseDamage": [12, 229] },
+    { "level": 21, "manaCost": 72, "castTime": 0.7, "baseDamage": [14, 257] },
+    { "level": 22, "manaCost": 82, "castTime": 0.7, "baseDamage": [15, 289] },
+    { "level": 23, "manaCost": 93, "castTime": 0.7, "baseDamage": [17, 324] },
+    { "level": 24, "manaCost": 105, "castTime": 0.7, "baseDamage": [19, 363] },
+    { "level": 25, "manaCost": 119, "castTime": 0.7, "baseDamage": [21, 406] },
+    { "level": 26, "manaCost": 135, "castTime": 0.7, "baseDamage": [24, 455] },
+    { "level": 27, "manaCost": 153, "castTime": 0.7, "baseDamage": [27, 509] },
+    { "level": 28, "manaCost": 173, "castTime": 0.7, "baseDamage": [30, 570] },
+    { "level": 29, "manaCost": 196, "castTime": 0.7, "baseDamage": [34, 638] },
+    { "level": 30, "manaCost": 222, "castTime": 0.7, "baseDamage": [38, 714] },
+    { "level": 31, "manaCost": 251, "castTime": 0.7, "baseDamage": [42, 799] },
+    { "level": 32, "manaCost": 284, "castTime": 0.7, "baseDamage": [47, 894] }
+  ]
+}
