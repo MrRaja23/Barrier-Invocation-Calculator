@@ -22,11 +22,18 @@
             <label for="infernalFlame">Infernal Flame:</label>
             <input id="infernalFlame" type="number" required placeholder="Enter flame value">
             
-            <label for="skill">Select Skill:</label>
-            <select id="skill" required>
-                <option value="" disabled selected>Select a skill</option>
-                <!-- Skills will be dynamically populated -->
+            <label for="skillName">Skill Name:</label>
+            <input id="skillName" type="text" required placeholder="Enter skill name" oninput="updateLevels()">
+            
+            <label for="skillLevel">Skill Level:</label>
+            <select id="skillLevel" required onchange="displaySkillData()">
+                <option value="" disabled selected>Select a level</option>
+                <!-- Levels will be dynamically populated -->
             </select>
+            
+            <div id="skillData">
+                <!-- Skill data will be displayed here -->
+            </div>
             
             <label for="targetEnergy">Target Energy Gain (660.01 to 660.25):</label>
             <input id="targetEnergy" type="number" required placeholder="Enter target energy gain">
