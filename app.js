@@ -1,18 +1,20 @@
 async function fetchSkillsData() {
     try {
-        const response = await fetch('skills.json');
+        const response = await fetch('skills.json'); // Adjust the path to match your file structure
         if (!response.ok) throw new Error('Failed to fetch skills data');
         const data = await response.json();
+        console.log('Fetched skills data:', data); // Log to confirm
         return data;
     } catch (error) {
         console.error('Error fetching skills data:', error);
-        return null; // Return null if fetching fails
+        return null; // Return null on error
     }
 }
 
 function populateSkillDropdown(skills) {
+    console.log('Populating dropdown with skills:', skills); // Log to confirm
     const skillSelect = document.getElementById('skill');
-    skillSelect.innerHTML = ''; // Clear existing options
+    skillSelect.innerHTML = '<option value="" disabled selected>Select a skill</option>'; // Placeholder
 
     for (let key in skills) {
         skills[key].forEach(level => {
@@ -28,7 +30,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     const skills = await fetchSkillsData();
     if (skills) {
         populateSkillDropdown(skills);
-        window.skillsData = skills; // Cache the data globally for reuse
+        window.skillsData = skills; // Cache globally
+    } else {
+        document.getElementById('skill').innerHTML = '<option value="" disabled selected>Error loading skills</option>';
     }
 });
 
