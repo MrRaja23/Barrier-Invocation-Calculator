@@ -1,5 +1,5 @@
 {
-    "arc": [
+    "Arc": [
         { "level": 1, "manaCost": 8, "castTime": 1.10, "baseDamage": [4, 20] },
         { "level": 2, "manaCost": 10, "castTime": 1.10, "baseDamage": [5, 28] },
         { "level": 3, "manaCost": 11, "castTime": 1.10, "baseDamage": [7, 38] },
@@ -36,7 +36,7 @@
 }
 
 {
-  "spark": [
+  "Spark": [
     { "level": 1, "manaCost": 6, "castTime": 0.7, "baseDamage": [1, 8] },
     { "level": 2, "manaCost": 6, "castTime": 0.7, "baseDamage": [1, 11] },
     { "level": 3, "manaCost": 7, "castTime": 0.7, "baseDamage": [1, 16] },
