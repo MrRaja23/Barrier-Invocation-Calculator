@@ -246,7 +246,7 @@
     <script>
         // Constants
         const SERVER_TICK = 33;
-        const BI_COOLDOWN = 0.8;
+        const BI_COOLDOWN = 0;
         const ENERGY_PER_TRIGGER = 220;
         const DEMONFLAME_DAMAGE_MULTIPLIER = 0.18;
         const DEMONFLAME_DEGEN_BASE = 1;
@@ -378,7 +378,7 @@
                 const baseDPS = (avgDamage * critMultiplier) * castsPerSecond;
 
                 // Recoup and Demonflame calculations
-                const maxRecoupPerSecond = (selfDamage * castsPerSecond) * recoup / 8;
+                const maxRecoupPerSecond = selfDamage * recoup * castsPerSecond;
                 const degenPerStack = DEMONFLAME_DEGEN_BASE + (life * DEMONFLAME_DEGEN_PERCENT);
                 const maxSustainableStacks = Math.floor(maxRecoupPerSecond / degenPerStack);
                 const stacksOverflow = targetStacks > maxSustainableStacks;
@@ -419,31 +419,33 @@
                         <p>Damage Range: <strong>${dmgMin} - ${dmgMax}</strong></p>
                         <p>Critical Chance: <strong>${(critChance * 100).toFixed(1)}%</strong></p>
                     </div>
-
-                    <div class="result-section ${stacksOverflow ? 'stack-warning' : ''}">
-                        <h4>Demonflame Optimization</h4>
-                        <div class="demonflame-controls">
-                            <div>
-                                <p>Current Stacks: <strong>${currentStacks}</strong></p>
-                                <p>Current DPS: <strong>${currentDPS}</strong></p>
+                        <div class="result-section ${stacksOverflow ? 'stack-warning' : ''}">
+                            <h4>Demonflame Optimization</h4>
+                            <div class="demonflame-controls">
+                                <div>
+                                    <p>Current Stacks: <strong>${currentStacks}</strong></p>
+                                    <p>Current DPS: <strong>${currentDPS}</strong></p>
+                                </div>
+                                <div>
+                                    <p>Target Stacks: <strong class="${stacksOverflow ? 'warning' : 'success'}">${targetStacks}</strong></p>
+                                    <p>Target DPS: <strong class="${stacksOverflow ? 'warning' : 'success'}">${targetDPS}</strong></p>
+                                </div>
+                                <div>
+                                    <p>Max Safe Stacks: <strong>${maxSustainableStacks}</strong></p>
+                                    <p>Safe DPS: <strong class="success">${maxSafeDPS}</strong></p>
+                                </div>
                             </div>
-                            <div>
-                                <p>Target Stacks: <strong class="${stacksOverflow ? 'warning' : 'success'}">${targetStacks}</strong></p>
-                                <p>Target DPS: <strong class="${stacksOverflow ? 'warning' : 'success'}">${targetDPS}</strong></p>
-                            </div>
-                            <div>
-                                <p>Max Safe Stacks: <strong>${maxSustainableStacks}</strong></p>
-                                <p>Safe DPS: <strong class="success">${maxSafeDPS}</strong></p>
-                            </div>
+                            ${stacksOverflow ? `
+                                <p class="warning">⚠️ Stack Overflow! Losing ${(degenPerStack * targetStacks - maxRecoupPerSecond).toFixed(1)} life/sec</p>
+                                <p>Degen at ${targetStacks} stacks: <strong class="warning">${(degenPerStack * targetStacks).toFixed(1)}/sec</strong></p>
+                                <p>Recoup Recovery: <strong class="success">${maxRecoupPerSecond.toFixed(1)}/sec</strong> 
+                                    (${castsPerSecond.toFixed(1)} casts/sec × ${(selfDamage * recoup).toFixed(1)} recoup/cast)</p>
+                            ` : ''}
+                            <p class="info">Each stack provides ${DEMONFLAME_DAMAGE_MULTIPLIER*100}% more spell damage</p>
+                            <p class="info">Degen per stack: ${degenPerStack.toFixed(2)}/sec (Base ${DEMONFLAME_DEGEN_BASE} + ${(DEMONFLAME_DEGEN_PERCENT*100).toFixed(2)}% of Life)</p>
+                            <p class="info">Recoup Mechanics: ${(recoup*100).toFixed(0)}% of damage recouped at ${(selfDamage * recoup).toFixed(1)}/sec per cast, 
+                                stacking additively across ${castsPerSecond.toFixed(1)} casts/sec (${maxRecoupPerSecond.toFixed(1)}/sec total)</p>
                         </div>
-                        ${stacksOverflow ? `
-                            <p class="warning">⚠️ Stack Overflow! Losing ${(degenPerStack * targetStacks - maxRecoupPerSecond).toFixed(1)} life/sec</p>
-                            <p>Degen at ${targetStacks} stacks: <strong class="warning">${(degenPerStack * targetStacks).toFixed(1)}/sec</strong></p>
-                            <p>Recoup Recovery: <strong class="success">${maxRecoupPerSecond.toFixed(1)}/sec</strong></p>
-                        ` : ''}
-                        <p class="info">Each stack provides ${DEMONFLAME_DAMAGE_MULTIPLIER*100}% more spell damage</p>
-                        <p class="info">Degen per stack: ${degenPerStack.toFixed(2)}/sec (Base ${DEMONFLAME_DEGEN_BASE} + ${(DEMONFLAME_DEGEN_PERCENT*100).toFixed(2)}% of Life)</p>
-                    </div>
 
                     <div class="result-section">
                         <h4>Resource Management</h4>
