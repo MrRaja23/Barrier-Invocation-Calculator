@@ -3,12 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PoE 2 Infernalist Calculator v2.0</title>
+    <title>PoE 2 Infernalist Calculator v3.0</title>
     <style>
         :root {
             --poe-gold: #FFAA00;
             --poe-dark: #1a1a1a;
             --poe-border: #443300;
+            --warning-red: #FF4444;
+            --success-green: #44FF44;
         }
 
         body {
@@ -21,7 +23,7 @@
         }
 
         .calculator {
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.85);
             border: 2px solid var(--poe-border);
             max-width: 800px;
             margin: 0 auto;
@@ -75,7 +77,7 @@
         }
 
         .error {
-            color: #ff4444;
+            color: var(--warning-red);
             margin: 1rem 0;
             display: none;
         }
@@ -87,6 +89,23 @@
             border-radius: 4px;
             border: 1px solid var(--poe-border);
         }
+
+        .result-section {
+            margin: 1.5rem 0;
+            padding: 1rem;
+            background: rgba(255, 170, 0, 0.03);
+            border-radius: 4px;
+        }
+
+        .result-section h4 {
+            color: var(--poe-gold);
+            margin-bottom: 0.8rem;
+            border-bottom: 1px solid var(--poe-border);
+            padding-bottom: 0.5rem;
+        }
+
+        .warning { color: var(--warning-red); }
+        .success { color: var(--success-green); }
 
         .save-system {
             display: flex;
@@ -100,8 +119,11 @@
             padding-top: 1.5rem;
         }
 
-        .warning { color: #FF4444; }
-        .success { color: #44FF44; }
+        @media (max-width: 600px) {
+            body { padding: 1rem; }
+            .calculator { padding: 1rem; }
+            .save-system { flex-direction: column; }
+        }
     </style>
 </head>
 <body>
@@ -113,7 +135,7 @@
             <input type="text" id="charName" placeholder="Character Name" style="flex:2">
             <button onclick="saveBuild()">Save Build</button>
             <button onclick="loadBuild()">Load Build</button>
-            <button onclick="deleteBuild()" style="background: #ff4444">Delete Build</button>
+            <button onclick="deleteBuild()" style="background: var(--warning-red)">Delete Build</button>
         </div>
 
         <!-- Build Inputs -->
@@ -133,10 +155,35 @@
         </div>
 
         <div class="input-group">
-            <label>Mana Cost Range (min-max)</label>
+            <label>Mana/Infernal Flame Pool</label>
+            <input type="number" id="infernalFlame" min="1" required>
+        </div>
+
+        <div class="input-group">
+            <label>Barrier Invocation Energy Gain (%)</label>
+            <input type="number" id="energyGain" min="100" step="1" required value="140">
+        </div>
+
+        <div class="input-group">
+            <label>In-game Ping (ms)</label>
+            <input type="number" id="ping" min="0" max="1000" value="50">
+        </div>
+
+        <div class="input-group">
+            <label>Mana Cost per Cast</label>
+            <input type="number" id="manaCost" required>
+        </div>
+
+        <div class="input-group">
+            <label>Critical Strike Chance (%)</label>
+            <input type="number" id="critChance" min="0" max="100" step="0.1">
+        </div>
+
+        <div class="input-group">
+            <label>Damage Range</label>
             <div style="display: flex; gap: 1rem;">
-                <input type="number" id="manaMin" placeholder="Min" required>
-                <input type="number" id="manaMax" placeholder="Max" required>
+                <input type="number" id="dmgMin" placeholder="Min" required>
+                <input type="number" id="dmgMax" placeholder="Max" required>
             </div>
         </div>
 
@@ -154,6 +201,11 @@
     </div>
 
     <script>
+        // Constants
+        const SERVER_TICK = 33; // 33ms server processing time
+        const BI_COOLDOWN = 0.8; // Base BI cooldown in seconds
+        const ENERGY_PER_TRIGGER = 220;
+
         // Cookie Management
         function getSavedBuilds() {
             const builds = document.cookie.split('; ')
@@ -176,8 +228,13 @@
                 life: document.getElementById('life').value,
                 es: document.getElementById('es').value,
                 fireRes: document.getElementById('fireRes').value,
-                manaMin: document.getElementById('manaMin').value,
-                manaMax: document.getElementById('manaMax').value
+                infernalFlame: document.getElementById('infernalFlame').value,
+                energyGain: document.getElementById('energyGain').value,
+                ping: document.getElementById('ping').value,
+                manaCost: document.getElementById('manaCost').value,
+                critChance: document.getElementById('critChance').value,
+                dmgMin: document.getElementById('dmgMin').value,
+                dmgMax: document.getElementById('dmgMax').value
             };
             
             updateCookie(builds);
@@ -195,8 +252,14 @@
             document.getElementById('life').value = build.life;
             document.getElementById('es').value = build.es;
             document.getElementById('fireRes').value = build.fireRes;
-            document.getElementById('manaMin').value = build.manaMin;
-            document.getElementById('manaMax').value = build.manaMax;
+            document.getElementById('infernalFlame').value = build.infernalFlame;
+            document.getElementById('energyGain').value = build.energyGain;
+            document.getElementById('ping').value = build.ping;
+            document.getElementById('manaCost').value = build.manaCost;
+            document.getElementById('critChance').value = build.critChance;
+            document.getElementById('dmgMin').value = build.dmgMin;
+            document.getElementById('dmgMax').value = build.dmgMax;
+            
             showError(`Loaded "${charName}"!`, 'success');
         }
 
@@ -226,29 +289,89 @@
         // Core Calculations
         function calculateLoop() {
             try {
+                // Get input values
                 const life = parseFloat(document.getElementById('life').value);
                 const es = parseFloat(document.getElementById('es').value);
                 const fireRes = parseFloat(document.getElementById('fireRes').value) / 100;
-                const manaMin = parseFloat(document.getElementById('manaMin').value);
-                const manaMax = parseFloat(document.getElementById('manaMax').value);
+                const infernalFlame = parseFloat(document.getElementById('infernalFlame').value);
+                const energyGain = (parseFloat(document.getElementById('energyGain').value) / 100) + 1;
+                const ping = parseFloat(document.getElementById('ping').value);
+                const manaCost = parseFloat(document.getElementById('manaCost').value);
+                const critChance = parseFloat(document.getElementById('critChance').value) / 100;
+                const dmgMin = parseFloat(document.getElementById('dmgMin').value);
+                const dmgMax = parseFloat(document.getElementById('dmgMax').value);
 
-                // Core calculations
+                // Defensive calculations
                 const totalHP = life + es;
                 const selfDamage = totalHP * (1 - fireRes);
-                const energyGained = selfDamage * 0.2; // 1/5 conversion
-                const castsPerSecond = (manaMax / selfDamage).toFixed(2);
+                const baseEnergy = (selfDamage / 5) * energyGain;
+                const initialTriggers = Math.floor(baseEnergy / ENERGY_PER_TRIGGER);
+                const leftoverEnergy = baseEnergy % ENERGY_PER_TRIGGER;
+
+                // Network calculations
+                const pingSeconds = ping / 1000;
+                const serverTickSeconds = SERVER_TICK / 1000;
+                const effectiveCastTime = BI_COOLDOWN + pingSeconds + serverTickSeconds;
+                const castsPerSecond = 1 / effectiveCastTime;
+
+                // Offensive calculations
+                const avgDamage = (dmgMin + dmgMax) / 2;
+                const critMultiplier = 1 + (critChance * 1.5);
+                const effectiveDPS = ((avgDamage * critMultiplier) * castsPerSecond).toFixed(2);
+
+                // Sustainability checks
+                const selfDPS = selfDamage * castsPerSecond;
+                const esRecovery = 10370; // From previous example
+                const sustainable = selfDPS <= esRecovery;
+                const manaSustainable = infernalFlame >= (manaCost * castsPerSecond);
+
+                // Double Cast prediction
+                let doubleCastData = "N/A";
+                if(leftoverEnergy > 0) {
+                    const cyclesForDouble = Math.ceil(ENERGY_PER_TRIGGER / leftoverEnergy);
+                    const doubleCastTime = (cyclesForDouble * effectiveCastTime).toFixed(2);
+                    doubleCastData = `${cyclesForDouble} cycles (${doubleCastTime}s)`;
+                }
 
                 // Display results
                 document.getElementById('result').innerHTML = `
-                    <h3>Results for ${document.getElementById('charName').value || 'Current Build'}:</h3>
-                    <p>Self Damage per Cycle: <strong>${selfDamage.toFixed(2)}</strong></p>
-                    <p>Energy Generation/Cycle: <strong>${energyGained.toFixed(2)}</strong></p>
-                    <p>Estimated Cast Rate: <strong>${castsPerSecond}/sec</strong></p>
-                    <p class="${castsPerSecond > 10 ? 'warning' : 'success'}">
-                        Sustainability: ${castsPerSecond > 10 ? '⚠️ Exceeds Safe Limits' : '✅ Stable Operation'}
-                    </p>
+                    <div class="result-section">
+                        <h4>Defensive Metrics</h4>
+                        <p>Self Damage/Cycle: <strong>${selfDamage.toFixed(2)}</strong></p>
+                        <p>Self DPS: <strong class="${sustainable ? 'success' : 'warning'}">${selfDPS.toFixed(2)}</strong></p>
+                        <p>ES Recovery: <strong>${esRecovery.toFixed(2)}/sec</strong></p>
+                    </div>
+
+                    <div class="result-section">
+                        <h4>Offensive Metrics</h4>
+                        <p>Effective Cast Rate: <strong>${castsPerSecond.toFixed(2)}/sec</strong></p>
+                        <p>Effective DPS: <strong>${effectiveDPS}</strong></p>
+                        <p>Damage Range: <strong>${dmgMin} - ${dmgMax}</strong></p>
+                        <p>Critical Chance: <strong>${(critChance * 100).toFixed(1)}%</strong></p>
+                    </div>
+
+                    <div class="result-section">
+                        <h4>Resource Management</h4>
+                        <p>Mana Sustainability: 
+                            <strong class="${manaSustainable ? 'success' : 'warning'}">
+                                ${manaSustainable ? '✅ Stable' : '⚠️ Insufficient'}
+                            </strong>
+                        </p>
+                        <p>Energy/Cycle: <strong>${baseEnergy.toFixed(2)}</strong></p>
+                        <p>Leftover Energy: <strong>${leftoverEnergy.toFixed(2)}</strong></p>
+                    </div>
+
+                    <div class="result-section">
+                        <h4>Network Analysis</h4>
+                        <p>Effective Cast Time: <strong>${(effectiveCastTime * 1000).toFixed(1)}ms</strong></p>
+                        <p>Server Tick: <strong>+${SERVER_TICK}ms</strong></p>
+                        <p>Double Cast Prediction: <strong>${doubleCastData}</strong></p>
+                        ${leftoverEnergy > 0 ? 
+                            `<p class="warning">⚠️ Energy Drift! Extra cast every ${doubleCastData}</p>` : 
+                            `<p class="success">✅ Perfect Energy Alignment</p>`}
+                    </div>
                 `;
-                
+
             } catch (error) {
                 showError(`Calculation error: ${error.message}`);
             }
