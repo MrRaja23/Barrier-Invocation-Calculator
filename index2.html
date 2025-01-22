@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PoE 2 Infernalist Calculator v3.0</title>
+    <title>PoE 2 Infernalist Calculator v4.0</title>
     <style>
         :root {
             --poe-gold: #FFAA00;
@@ -119,10 +119,28 @@
             padding-top: 1.5rem;
         }
 
+        .demonflame-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .stack-warning {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { background-color: rgba(255, 68, 68, 0.1); }
+            50% { background-color: rgba(255, 68, 68, 0.3); }
+            100% { background-color: rgba(255, 68, 68, 0.1); }
+        }
+
         @media (max-width: 600px) {
             body { padding: 1rem; }
             .calculator { padding: 1rem; }
             .save-system { flex-direction: column; }
+            .demonflame-controls { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -187,6 +205,31 @@
             </div>
         </div>
 
+        <!-- New Recoup and Demonflame Inputs -->
+        <div class="input-group">
+            <label>Recoup Percentage (%)</label>
+            <input type="number" id="recoup" min="0" max="100" step="1" value="24">
+        </div>
+
+        <div class="input-group">
+            <label>Flask ES Recovery/sec</label>
+            <input type="number" id="esRecovery" min="0" value="10370">
+        </div>
+
+        <div class="input-group">
+            <label>Demonflame Customization</label>
+            <div class="demonflame-controls">
+                <div>
+                    <label>Current Stacks</label>
+                    <input type="number" id="currentStacks" min="0" value="0">
+                </div>
+                <div>
+                    <label>Target Stacks</label>
+                    <input type="number" id="targetStacks" min="0" value="0">
+                </div>
+            </div>
+        </div>
+
         <button onclick="calculateLoop()" style="width: 100%">Calculate Loop Stability</button>
         
         <!-- Results Display -->
@@ -202,9 +245,12 @@
 
     <script>
         // Constants
-        const SERVER_TICK = 33; // 33ms server processing time
-        const BI_COOLDOWN = 0.8; // Base BI cooldown in seconds
+        const SERVER_TICK = 33;
+        const BI_COOLDOWN = 0.8;
         const ENERGY_PER_TRIGGER = 220;
+        const DEMONFLAME_DAMAGE_MULTIPLIER = 0.18;
+        const DEMONFLAME_DEGEN_BASE = 1;
+        const DEMONFLAME_DEGEN_PERCENT = 0.0005;
 
         // Cookie Management
         function getSavedBuilds() {
@@ -234,7 +280,11 @@
                 manaCost: document.getElementById('manaCost').value,
                 critChance: document.getElementById('critChance').value,
                 dmgMin: document.getElementById('dmgMin').value,
-                dmgMax: document.getElementById('dmgMax').value
+                dmgMax: document.getElementById('dmgMax').value,
+                recoup: document.getElementById('recoup').value,
+                esRecovery: document.getElementById('esRecovery').value,
+                currentStacks: document.getElementById('currentStacks').value,
+                targetStacks: document.getElementById('targetStacks').value
             };
             
             updateCookie(builds);
@@ -259,6 +309,10 @@
             document.getElementById('critChance').value = build.critChance;
             document.getElementById('dmgMin').value = build.dmgMin;
             document.getElementById('dmgMax').value = build.dmgMax;
+            document.getElementById('recoup').value = build.recoup;
+            document.getElementById('esRecovery').value = build.esRecovery;
+            document.getElementById('currentStacks').value = build.currentStacks;
+            document.getElementById('targetStacks').value = build.targetStacks;
             
             showError(`Loaded "${charName}"!`, 'success');
         }
@@ -300,8 +354,12 @@
                 const critChance = parseFloat(document.getElementById('critChance').value) / 100;
                 const dmgMin = parseFloat(document.getElementById('dmgMin').value);
                 const dmgMax = parseFloat(document.getElementById('dmgMax').value);
+                const recoup = parseFloat(document.getElementById('recoup').value) / 100;
+                const esRecovery = parseFloat(document.getElementById('esRecovery').value);
+                const currentStacks = parseInt(document.getElementById('currentStacks').value) || 0;
+                const targetStacks = parseInt(document.getElementById('targetStacks').value) || 0;
 
-                // Defensive calculations
+                // Core calculations
                 const totalHP = life + es;
                 const selfDamage = totalHP * (1 - fireRes);
                 const baseEnergy = (selfDamage / 5) * energyGain;
@@ -317,11 +375,23 @@
                 // Offensive calculations
                 const avgDamage = (dmgMin + dmgMax) / 2;
                 const critMultiplier = 1 + (critChance * 1.5);
-                const effectiveDPS = ((avgDamage * critMultiplier) * castsPerSecond).toFixed(2);
+                const baseDPS = (avgDamage * critMultiplier) * castsPerSecond;
+
+                // Recoup and Demonflame calculations
+                const maxRecoupPerSecond = (selfDamage * castsPerSecond) * recoup / 8;
+                const degenPerStack = DEMONFLAME_DEGEN_BASE + (life * DEMONFLAME_DEGEN_PERCENT);
+                const maxSustainableStacks = Math.floor(maxRecoupPerSecond / degenPerStack);
+                const stacksOverflow = targetStacks > maxSustainableStacks;
+
+                // Damage calculations with Demonflame
+                const currentMultiplier = 1 + (currentStacks * DEMONFLAME_DAMAGE_MULTIPLIER);
+                const targetMultiplier = 1 + (targetStacks * DEMONFLAME_DAMAGE_MULTIPLIER);
+                const currentDPS = (baseDPS * currentMultiplier).toFixed(2);
+                const targetDPS = (baseDPS * targetMultiplier).toFixed(2);
+                const maxSafeDPS = (baseDPS * (1 + (maxSustainableStacks * DEMONFLAME_DAMAGE_MULTIPLIER))).toFixed(2);
 
                 // Sustainability checks
                 const selfDPS = selfDamage * castsPerSecond;
-                const esRecovery = 10370; // From previous example
                 const sustainable = selfDPS <= esRecovery;
                 const manaSustainable = infernalFlame >= (manaCost * castsPerSecond);
 
@@ -333,8 +403,8 @@
                     doubleCastData = `${cyclesForDouble} cycles (${doubleCastTime}s)`;
                 }
 
-                // Display results
-                document.getElementById('result').innerHTML = `
+                // Build results HTML
+                const resultsHTML = `
                     <div class="result-section">
                         <h4>Defensive Metrics</h4>
                         <p>Self Damage/Cycle: <strong>${selfDamage.toFixed(2)}</strong></p>
@@ -345,9 +415,34 @@
                     <div class="result-section">
                         <h4>Offensive Metrics</h4>
                         <p>Effective Cast Rate: <strong>${castsPerSecond.toFixed(2)}/sec</strong></p>
-                        <p>Effective DPS: <strong>${effectiveDPS}</strong></p>
+                        <p>Base DPS: <strong>${baseDPS.toFixed(2)}</strong></p>
                         <p>Damage Range: <strong>${dmgMin} - ${dmgMax}</strong></p>
                         <p>Critical Chance: <strong>${(critChance * 100).toFixed(1)}%</strong></p>
+                    </div>
+
+                    <div class="result-section ${stacksOverflow ? 'stack-warning' : ''}">
+                        <h4>Demonflame Optimization</h4>
+                        <div class="demonflame-controls">
+                            <div>
+                                <p>Current Stacks: <strong>${currentStacks}</strong></p>
+                                <p>Current DPS: <strong>${currentDPS}</strong></p>
+                            </div>
+                            <div>
+                                <p>Target Stacks: <strong class="${stacksOverflow ? 'warning' : 'success'}">${targetStacks}</strong></p>
+                                <p>Target DPS: <strong class="${stacksOverflow ? 'warning' : 'success'}">${targetDPS}</strong></p>
+                            </div>
+                            <div>
+                                <p>Max Safe Stacks: <strong>${maxSustainableStacks}</strong></p>
+                                <p>Safe DPS: <strong class="success">${maxSafeDPS}</strong></p>
+                            </div>
+                        </div>
+                        ${stacksOverflow ? `
+                            <p class="warning">⚠️ Stack Overflow! Losing ${(degenPerStack * targetStacks - maxRecoupPerSecond).toFixed(1)} life/sec</p>
+                            <p>Degen at ${targetStacks} stacks: <strong class="warning">${(degenPerStack * targetStacks).toFixed(1)}/sec</strong></p>
+                            <p>Recoup Recovery: <strong class="success">${maxRecoupPerSecond.toFixed(1)}/sec</strong></p>
+                        ` : ''}
+                        <p class="info">Each stack provides ${DEMONFLAME_DAMAGE_MULTIPLIER*100}% more spell damage</p>
+                        <p class="info">Degen per stack: ${degenPerStack.toFixed(2)}/sec (Base ${DEMONFLAME_DEGEN_BASE} + ${(DEMONFLAME_DEGEN_PERCENT*100).toFixed(2)}% of Life)</p>
                     </div>
 
                     <div class="result-section">
@@ -371,6 +466,8 @@
                             `<p class="success">✅ Perfect Energy Alignment</p>`}
                     </div>
                 `;
+
+                document.getElementById('result').innerHTML = resultsHTML;
 
             } catch (error) {
                 showError(`Calculation error: ${error.message}`);
