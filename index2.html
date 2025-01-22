@@ -3,15 +3,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PoE 2 Infernalist Loop Calculator v1.1</title>
+    <title>PoE 2 Infernalist Calculator v2.0</title>
     <style>
-        /* Added ramp calculator styling */
-        .ramp-calculator {
-            margin-top: 2rem;
-            padding: 1rem;
-            background: rgba(255, 170, 0, 0.05);
-            border: 1px solid #FFAA0033;
+        :root {
+            --poe-gold: #FFAA00;
+            --poe-dark: #1a1a1a;
+            --poe-border: #443300;
+        }
+
+        body {
+            background: rgba(0, 0, 0, 0.9) url('pathofexile2-bg.webp') center/cover fixed;
+            font-family: 'Arial', sans-serif;
+            color: #fff;
+            min-height: 100vh;
+            margin: 0;
+            padding: 2rem;
+        }
+
+        .calculator {
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid var(--poe-border);
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 0 30px rgba(255, 170, 0, 0.1);
+        }
+
+        h1 {
+            color: var(--poe-gold);
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 2.2rem;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #cccccc;
+            font-size: 0.9rem;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 0.8rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid #332200;
+            color: #fff;
             border-radius: 4px;
+            margin-bottom: 0.5rem;
+        }
+
+        button {
+            background: var(--poe-gold);
+            color: #000;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            cursor: pointer;
+            font-weight: bold;
+            transition: opacity 0.3s;
+            border-radius: 4px;
+            margin: 0.5rem;
+        }
+
+        button:hover {
+            opacity: 0.8;
+        }
+
+        .error {
+            color: #ff4444;
+            margin: 1rem 0;
+            display: none;
+        }
+
+        .result {
+            background: rgba(255, 170, 0, 0.05);
+            padding: 1.5rem;
+            margin-top: 2rem;
+            border-radius: 4px;
+            border: 1px solid var(--poe-border);
+        }
+
+        .save-system {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .character-management {
+            margin-top: 2rem;
+            border-top: 1px solid var(--poe-border);
+            padding-top: 1.5rem;
         }
 
         .warning { color: #FF4444; }
@@ -20,79 +106,165 @@
 </head>
 <body>
     <div class="calculator">
-        <!-- Previous inputs remain the same -->
+        <h1>Infernalist Loop Calculator</h1>
         
-        <!-- New Ramp Calculator Inputs -->
-        <div class="ramp-calculator">
-            <h3>Ramp Configuration</h3>
-            <div class="input-group">
-                <label>BI Energy per Trigger:</label>
-                <input type="number" id="energyPerTrigger" value="220" step="1">
-            </div>
-            <div class="input-group">
-                <label>BI Cooldown (seconds):</label>
-                <input type="number" id="biCooldown" value="0.8" step="0.1">
+        <!-- Character Management -->
+        <div class="save-system">
+            <input type="text" id="charName" placeholder="Character Name" style="flex:2">
+            <button onclick="saveBuild()">Save Build</button>
+            <button onclick="loadBuild()">Load Build</button>
+            <button onclick="deleteBuild()" style="background: #ff4444">Delete Build</button>
+        </div>
+
+        <!-- Build Inputs -->
+        <div class="input-group">
+            <label>Character Life</label>
+            <input type="number" id="life" min="1" required>
+        </div>
+
+        <div class="input-group">
+            <label>Energy Shield (ES)</label>
+            <input type="number" id="es" min="0" required>
+        </div>
+
+        <div class="input-group">
+            <label>Fire Resistance (%)</label>
+            <input type="number" id="fireRes" min="0" max="90" required>
+        </div>
+
+        <div class="input-group">
+            <label>Mana Cost Range (min-max)</label>
+            <div style="display: flex; gap: 1rem;">
+                <input type="number" id="manaMin" placeholder="Min" required>
+                <input type="number" id="manaMax" placeholder="Max" required>
             </div>
         </div>
 
-        <button onclick="calculateLoop()">Calculate Loop Stability</button>
+        <button onclick="calculateLoop()" style="width: 100%">Calculate Loop Stability</button>
         
+        <!-- Results Display -->
         <div class="result" id="result"></div>
+        <div class="error" id="error"></div>
+
+        <!-- Saved Characters -->
+        <div class="character-management">
+            <h3>Saved Builds</h3>
+            <div id="savedChars"></div>
+        </div>
     </div>
 
     <script>
-        function calculateLoop() {
-            // Previous calculations remain the same
-            
-            // New Ramp Calculations
-            const energyPerTrigger = parseFloat(document.getElementById('energyPerTrigger').value) || 220;
-            const biCooldown = parseFloat(document.getElementById('biCooldown').value) || 0.8;
-
-            // Ramp simulation parameters
-            let currentEnergy = buffedEnergy;
-            let leftoverEnergy = currentEnergy % energyPerTrigger;
-            let cycles = 0;
-            let totalTime = 0;
-            let safeCycles = 0;
-            let energyHistory = [];
-
-            while (cycles < 1000 && totalTime < 30) { // Limit to 30 seconds simulation
-                const triggers = Math.floor(currentEnergy / energyPerTrigger);
-                leftoverEnergy = currentEnergy % energyPerTrigger;
-                
-                // Energy from new overflow (simplified)
-                currentEnergy = buffedEnergy + leftoverEnergy;
-                
-                // Time accounting (3 triggers per BI activation)
-                totalTime += biCooldown * (triggers / 3);
-                
-                // Track energy buildup
-                energyHistory.push({
-                    cycle: cycles,
-                    energy: currentEnergy.toFixed(2),
-                    time: totalTime.toFixed(2),
-                    triggers
-                });
-
-                // Check sustainability
-                const currentDPS = selfDamage * (triggers / biCooldown);
-                if (currentDPS > 10370) break; // Stop when exceeding flask regen
-                
-                cycles++;
-                safeCycles = cycles;
-            }
-
-            // Display results
-            resultDiv.innerHTML += `
-                <h3>Ramp Analysis:</h3>
-                <p>Initial Energy/Overflow: <strong>${buffedEnergy.toFixed(2)}</strong></p>
-                <p>Leftover Energy/cycle: <strong>${leftoverEnergy.toFixed(2)}</strong></p>
-                <p>Safe Duration: <strong>${totalTime.toFixed(2)}s</strong> (${safeCycles} cycles)</p>
-                <p>Final Trigger Rate: <strong class="${totalTime < 30 ? 'warning' : 'success'}">
-                    ${((safeCycles / totalTime) || 0).toFixed(2)} triggers/sec
-                </strong></p>
-            `;
+        // Cookie Management
+        function getSavedBuilds() {
+            const builds = document.cookie.split('; ')
+                .find(row => row.startsWith('infernalistBuilds='));
+            return builds ? JSON.parse(decodeURIComponent(builds.split('=')[1])) : {};
         }
+
+        function updateCookie(builds) {
+            const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toUTCString();
+            document.cookie = `infernalistBuilds=${encodeURIComponent(JSON.stringify(builds))}; expires=${expires}; path=/`;
+        }
+
+        // Build Management
+        function saveBuild() {
+            const charName = document.getElementById('charName').value.trim();
+            if (!charName) return showError('Enter character name!');
+            
+            const builds = getSavedBuilds();
+            builds[charName] = {
+                life: document.getElementById('life').value,
+                es: document.getElementById('es').value,
+                fireRes: document.getElementById('fireRes').value,
+                manaMin: document.getElementById('manaMin').value,
+                manaMax: document.getElementById('manaMax').value
+            };
+            
+            updateCookie(builds);
+            showError(`Saved "${charName}"!`, 'success');
+            listSavedBuilds();
+        }
+
+        function loadBuild() {
+            const charName = document.getElementById('charName').value.trim();
+            const builds = getSavedBuilds();
+            const build = builds[charName];
+            
+            if (!build) return showError('Build not found!');
+            
+            document.getElementById('life').value = build.life;
+            document.getElementById('es').value = build.es;
+            document.getElementById('fireRes').value = build.fireRes;
+            document.getElementById('manaMin').value = build.manaMin;
+            document.getElementById('manaMax').value = build.manaMax;
+            showError(`Loaded "${charName}"!`, 'success');
+        }
+
+        function deleteBuild() {
+            const charName = document.getElementById('charName').value.trim();
+            const builds = getSavedBuilds();
+            
+            if (!builds[charName]) return showError('Build not found!');
+            
+            delete builds[charName];
+            updateCookie(builds);
+            showError(`Deleted "${charName}"!`, 'success');
+            listSavedBuilds();
+        }
+
+        function listSavedBuilds() {
+            const builds = getSavedBuilds();
+            const container = document.getElementById('savedChars');
+            container.innerHTML = Object.keys(builds).map(name => `
+                <div style="margin: 0.5rem 0; padding: 0.5rem; background: rgba(255,170,0,0.1);">
+                    ${name} 
+                    <button onclick="document.getElementById('charName').value='${name}'; loadBuild()">Load</button>
+                </div>
+            `).join('');
+        }
+
+        // Core Calculations
+        function calculateLoop() {
+            try {
+                const life = parseFloat(document.getElementById('life').value);
+                const es = parseFloat(document.getElementById('es').value);
+                const fireRes = parseFloat(document.getElementById('fireRes').value) / 100;
+                const manaMin = parseFloat(document.getElementById('manaMin').value);
+                const manaMax = parseFloat(document.getElementById('manaMax').value);
+
+                // Core calculations
+                const totalHP = life + es;
+                const selfDamage = totalHP * (1 - fireRes);
+                const energyGained = selfDamage * 0.2; // 1/5 conversion
+                const castsPerSecond = (manaMax / selfDamage).toFixed(2);
+
+                // Display results
+                document.getElementById('result').innerHTML = `
+                    <h3>Results for ${document.getElementById('charName').value || 'Current Build'}:</h3>
+                    <p>Self Damage per Cycle: <strong>${selfDamage.toFixed(2)}</strong></p>
+                    <p>Energy Generation/Cycle: <strong>${energyGained.toFixed(2)}</strong></p>
+                    <p>Estimated Cast Rate: <strong>${castsPerSecond}/sec</strong></p>
+                    <p class="${castsPerSecond > 10 ? 'warning' : 'success'}">
+                        Sustainability: ${castsPerSecond > 10 ? '⚠️ Exceeds Safe Limits' : '✅ Stable Operation'}
+                    </p>
+                `;
+                
+            } catch (error) {
+                showError(`Calculation error: ${error.message}`);
+            }
+        }
+
+        // UI Helpers
+        function showError(message, type = 'error') {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.className = type;
+            errorDiv.style.display = 'block';
+            setTimeout(() => errorDiv.style.display = 'none', 5000);
+        }
+
+        // Initial Load
+        document.addEventListener('DOMContentLoaded', listSavedBuilds);
     </script>
 </body>
 </html>
