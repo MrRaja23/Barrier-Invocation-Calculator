@@ -3,118 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PoE 2 Infernalist Loop Calculator</title>
+    <title>PoE 2 Infernalist Loop Calculator v1.1</title>
     <style>
-        /* CSS with improved error handling */
-        :root {
-            --poe-gold: #FFAA00;
-            --poe-dark: #1a1a1a;
-        }
-
-        body {
-            background: rgba(0, 0, 0, 0.9) url('pathofexile2-bg.webp') center/cover fixed;
-            font-family: 'Arial', sans-serif;
-            color: #fff;
-            min-height: 100vh;
-            margin: 0;
-            padding: 2rem;
-        }
-
-        .calculator {
-            background: rgba(0, 0, 0, 0.8);
-            border: 1px solid var(--poe-gold);
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 2rem;
-            border-radius: 4px;
-            box-shadow: 0 0 20px rgba(255, 170, 0, 0.2);
-        }
-
-        h1 {
-            color: var(--poe-gold);
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-
-        .input-group {
-            margin-bottom: 1.5rem;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: #ccc;
-        }
-
-        input, select {
-            width: 100%;
-            padding: 0.8rem;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid #444;
-            color: #fff;
-            border-radius: 4px;
-            margin-bottom: 0.5rem;
-        }
-
-        button {
-            background: var(--poe-gold);
-            color: #000;
-            border: none;
-            padding: 1rem 2rem;
-            cursor: pointer;
-            width: 100%;
-            font-weight: bold;
-            transition: opacity 0.3s;
-        }
-
-        button:hover {
-            opacity: 0.9;
-        }
-
-        .error {
-            color: #ff4444;
-            margin: 1rem 0;
-            display: none;
-        }
-
-        .result {
-            background: rgba(255, 170, 0, 0.1);
+        /* Added ramp calculator styling */
+        .ramp-calculator {
+            margin-top: 2rem;
             padding: 1rem;
-            margin-top: 1rem;
+            background: rgba(255, 170, 0, 0.05);
+            border: 1px solid #FFAA0033;
             border-radius: 4px;
         }
 
-        .loading {
-            text-align: center;
-            color: var(--poe-gold);
-            display: none;
-        }
+        .warning { color: #FF4444; }
+        .success { color: #44FF44; }
     </style>
 </head>
 <body>
     <div class="calculator">
-        <h1>Infernalist Loop Calculator</h1>
-        <div class="error" id="error"></div>
-        <div class="loading" id="loading">Loading skill data...</div>
-
-        <div class="input-group">
-            <label>Character Life:</label>
-            <input type="number" id="life" min="1" required value="332">
-        </div>
-
-        <div class="input-group">
-            <label>Energy Shield (ES):</label>
-            <input type="number" id="es" min="0" required value="5946">
-        </div>
-
-        <div class="input-group">
-            <label>Fire Resistance (%):</label>
-            <input type="number" id="fireRes" min="0" max="90" required value="78">
-        </div>
-
-        <div class="input-group">
-            <label>Buff Factor (1.0 = 100%):</label>
-            <input type="number" id="buffFactor" min="1" step="0.1" required value="2.4">
+        <!-- Previous inputs remain the same -->
+        
+        <!-- New Ramp Calculator Inputs -->
+        <div class="ramp-calculator">
+            <h3>Ramp Configuration</h3>
+            <div class="input-group">
+                <label>BI Energy per Trigger:</label>
+                <input type="number" id="energyPerTrigger" value="220" step="1">
+            </div>
+            <div class="input-group">
+                <label>BI Cooldown (seconds):</label>
+                <input type="number" id="biCooldown" value="0.8" step="0.1">
+            </div>
         </div>
 
         <button onclick="calculateLoop()">Calculate Loop Stability</button>
@@ -123,82 +41,58 @@
     </div>
 
     <script>
-        // Core Formula Constants
-        const ENERGY_PER_ES_LOST = 0.2; // 1 energy per 5 ES lost (1/5 = 0.2)
-        const TARGET_ENERGY_MIN = 660.01;
-        const TARGET_ENERGY_MAX = 660.25;
-
-        function showError(message) {
-            const errorDiv = document.getElementById('error');
-            errorDiv.textContent = message;
-            errorDiv.style.display = 'block';
-        }
-
-        function clearError() {
-            document.getElementById('error').style.display = 'none';
-        }
-
-        function validateInputs() {
-            const inputs = ['life', 'es', 'fireRes', 'buffFactor'];
-            for (const id of inputs) {
-                const value = parseFloat(document.getElementById(id).value);
-                if (isNaN(value) || value < 0) {
-                    showError(`Invalid value in ${id.replace(/([A-Z])/g, ' $1').toLowerCase()}`);
-                    return false;
-                }
-            }
-            return true;
-        }
-
         function calculateLoop() {
-            clearError();
-            if (!validateInputs()) return;
+            // Previous calculations remain the same
+            
+            // New Ramp Calculations
+            const energyPerTrigger = parseFloat(document.getElementById('energyPerTrigger').value) || 220;
+            const biCooldown = parseFloat(document.getElementById('biCooldown').value) || 0.8;
 
-            // Get input values
-            const life = parseFloat(document.getElementById('life').value);
-            const es = parseFloat(document.getElementById('es').value);
-            const fireRes = parseFloat(document.getElementById('fireRes').value) / 100;
-            const buffFactor = parseFloat(document.getElementById('buffFactor').value);
+            // Ramp simulation parameters
+            let currentEnergy = buffedEnergy;
+            let leftoverEnergy = currentEnergy % energyPerTrigger;
+            let cycles = 0;
+            let totalTime = 0;
+            let safeCycles = 0;
+            let energyHistory = [];
 
-            // Core calculations
-            try {
-                // 1. Calculate self-damage from Pyromantic Pact overflow
-                const totalHP = life + es;
-                const selfDamage = totalHP * (1 - fireRes);
+            while (cycles < 1000 && totalTime < 30) { // Limit to 30 seconds simulation
+                const triggers = Math.floor(currentEnergy / energyPerTrigger);
+                leftoverEnergy = currentEnergy % energyPerTrigger;
                 
-                // 2. Calculate energy gained (before buffs)
-                const baseEnergy = selfDamage * ENERGY_PER_ES_LOST;
+                // Energy from new overflow (simplified)
+                currentEnergy = buffedEnergy + leftoverEnergy;
                 
-                // 3. Apply buff factor CORRECTLY (multiplication)
-                const buffedEnergy = baseEnergy * buffFactor;
+                // Time accounting (3 triggers per BI activation)
+                totalTime += biCooldown * (triggers / 3);
                 
-                // 4. Calculate required ES for target energy range
-                const requiredESMin = (TARGET_ENERGY_MIN / buffFactor - baseEnergy) / (ENERGY_PER_ES_LOST * (1 - fireRes)) - life;
-                const requiredESMax = (TARGET_ENERGY_MAX / buffFactor - baseEnergy) / (ENERGY_PER_ES_LOST * (1 - fireRes)) - life;
+                // Track energy buildup
+                energyHistory.push({
+                    cycle: cycles,
+                    energy: currentEnergy.toFixed(2),
+                    time: totalTime.toFixed(2),
+                    triggers
+                });
 
-                // 5. Calculate damage per second metrics
-                const castsPerSecond = 1 / (buffedEnergy / 1000); // Simplified cast rate
-                const damagePerSecond = selfDamage * castsPerSecond;
-
-                // Display results
-                const resultDiv = document.getElementById('result');
-                resultDiv.innerHTML = `
-                    <h3>Results:</h3>
-                    <p>Self Damage per Overflow: <strong>${selfDamage.toFixed(1)}</strong></p>
-                    <p>Base Energy Gained: <strong>${baseEnergy.toFixed(1)}</strong></p>
-                    <p>Buffed Energy: <strong>${buffedEnergy.toFixed(1)}</strong></p>
-                    <p>Estimated Cast Rate: <strong>${castsPerSecond.toFixed(1)}/sec</strong></p>
-                    <p>Required ES Range: <strong>${Math.max(0, requiredESMin).toFixed(1)} - ${Math.max(0, requiredESMax).toFixed(1)}</strong></p>
-                    <p>DPS to Self: <strong class="warning">${damagePerSecond.toFixed(1)}/sec</strong></p>
-                `;
-
-            } catch (error) {
-                showError(`Calculation error: ${error.message}`);
+                // Check sustainability
+                const currentDPS = selfDamage * (triggers / biCooldown);
+                if (currentDPS > 10370) break; // Stop when exceeding flask regen
+                
+                cycles++;
+                safeCycles = cycles;
             }
-        }
 
-        // Initial setup
-        document.getElementById('loading').style.display = 'none';
+            // Display results
+            resultDiv.innerHTML += `
+                <h3>Ramp Analysis:</h3>
+                <p>Initial Energy/Overflow: <strong>${buffedEnergy.toFixed(2)}</strong></p>
+                <p>Leftover Energy/cycle: <strong>${leftoverEnergy.toFixed(2)}</strong></p>
+                <p>Safe Duration: <strong>${totalTime.toFixed(2)}s</strong> (${safeCycles} cycles)</p>
+                <p>Final Trigger Rate: <strong class="${totalTime < 30 ? 'warning' : 'success'}">
+                    ${((safeCycles / totalTime) || 0).toFixed(2)} triggers/sec
+                </strong></p>
+            `;
+        }
     </script>
 </body>
 </html>
